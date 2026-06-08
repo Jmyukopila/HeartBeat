@@ -1,0 +1,1574 @@
+<!doctype html>
+<html lang="es">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Corazón Latiente 3D</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Arial', sans-serif;
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    .custom-cursor {
+      position: fixed;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #ff3366;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transition: all 0.1s ease;
+      mix-blend-mode: screen;
+      box-shadow: 0 0 10px #ff3366, 0 0 20px #ff3366;
+    }
+
+    .custom-cursor::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 4px;
+      height: 4px;
+      background: #ff3366;
+      border-radius: 50%;
+      box-shadow: 0 0 5px #ff3366;
+    }
+
+    .custom-cursor::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 30px;
+      height: 30px;
+      border: 1px solid rgba(255, 51, 102, 0.3);
+      border-radius: 50%;
+      animation: cursorPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes cursorPulse {
+      0%, 100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: translate(-50%, -50%) scale(1.5);
+        opacity: 0.3;
+      }
+    }
+
+    .custom-cursor.clicking {
+      transform: scale(0.8);
+      border-color: #00ffff;
+      box-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff;
+    }
+
+    .custom-cursor.clicking::before {
+      background: #00ffff;
+      box-shadow: 0 0 10px #00ffff;
+    }
+
+    .cursor-trail {
+      position: fixed;
+      width: 8px;
+      height: 8px;
+      background: #ff3366;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9998;
+      opacity: 0.6;
+      animation: trailFade 0.5s ease-out forwards;
+    }
+
+    @keyframes trailFade {
+      to {
+        opacity: 0;
+        transform: scale(0.3);
+      }
+    }
+
+    html {
+      height: 100%;
+    }
+
+    .container {
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      position: relative;
+      background-image: 
+        repeating-linear-gradient(0deg, transparent, transparent 49px, rgba(0, 255, 255, 0.03) 49px, rgba(0, 255, 255, 0.03) 50px),
+        repeating-linear-gradient(90deg, transparent, transparent 49px, rgba(0, 255, 255, 0.03) 49px, rgba(0, 255, 255, 0.03) 50px);
+    }
+    
+    .container::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        radial-gradient(circle at 20% 30%, rgba(0, 50, 100, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(100, 0, 50, 0.15) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .stars {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      transition: transform 0.1s ease-out;
+    }
+
+    .star {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: white;
+      border-radius: 50%;
+      animation: twinkle 3s infinite;
+      transition: all 0.3s ease-out;
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.3; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.5); }
+    }
+
+    @keyframes medicalFloat {
+      0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 0.05;
+      }
+      50% {
+        opacity: 0.15;
+      }
+      100% {
+        transform: translateY(-100px) rotate(360deg);
+        opacity: 0.05;
+      }
+    }
+
+    .interactive-glow {
+      position: fixed;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      background: radial-gradient(circle, rgba(255, 50, 100, 0.3) 0%, transparent 70%);
+      mix-blend-mode: screen;
+      filter: blur(40px);
+    }
+
+    .pulse-ring {
+      position: fixed;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0;
+      border: 2px solid rgba(0, 255, 255, 0.5);
+      animation: pulseRing 2s ease-out;
+    }
+
+    @keyframes pulseRing {
+      0% {
+        transform: scale(0.5);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(3);
+        opacity: 0;
+      }
+    }
+
+    .content-wrapper {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+
+    .title {
+      font-size: 3rem;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 2rem;
+      text-shadow: 0 0 20px currentColor, 0 0 40px currentColor;
+      animation: titlePulse 2s ease-in-out infinite;
+    }
+
+    @keyframes titlePulse {
+      0%, 100% { transform: scale(1); opacity: 0.9; }
+      50% { transform: scale(1.05); opacity: 1; }
+    }
+
+    .heart-container {
+      margin-bottom: 3rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      perspective: 1000px;
+      cursor: pointer;
+    }
+
+    .heart-3d {
+      width: 250px;
+      height: 250px;
+      position: relative;
+      transform-style: preserve-3d;
+      animation: rotate3d 20s linear infinite, heartbeat3d 1.2s ease-in-out infinite;
+      transition: transform 0.3s ease;
+    }
+
+    .heart-3d:hover {
+      animation-play-state: paused;
+      transform: scale(1.1) rotateY(180deg);
+    }
+
+    @keyframes rotate3d {
+      0% { transform: rotateY(0deg) rotateX(0deg); }
+      50% { transform: rotateY(180deg) rotateX(10deg); }
+      100% { transform: rotateY(360deg) rotateX(0deg); }
+    }
+
+    @keyframes heartbeat3d {
+      0%, 100% {
+        transform: scale(1);
+      }
+      25% {
+        transform: scale(1.08);
+      }
+      50% {
+        transform: scale(1);
+      }
+      75% {
+        transform: scale(1.12);
+      }
+    }
+
+    .heart-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      backface-visibility: visible;
+      border-radius: 20px;
+    }
+
+    .heart-svg {
+      width: 180px;
+      height: 180px;
+      filter: drop-shadow(0 0 30px currentColor) drop-shadow(0 0 60px currentColor);
+    }
+
+    .particles {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      animation: particleFloat 4s ease-in-out infinite;
+    }
+
+    @keyframes particleFloat {
+      0%, 100% {
+        transform: translateY(0) scale(1);
+        opacity: 0;
+      }
+      10% {
+        opacity: 1;
+      }
+      90% {
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-150px) scale(0.3);
+        opacity: 0;
+      }
+    }
+
+    .ecg-line-3d {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 160px;
+      height: 80px;
+      overflow: visible;
+      z-index: 10;
+    }
+
+    .ecg-path-3d {
+      stroke-width: 3;
+      fill: none;
+      stroke-dasharray: 300;
+      stroke-dashoffset: 300;
+      animation: ecg-pulse 1.2s ease-in-out infinite;
+      filter: drop-shadow(0 0 15px currentColor) drop-shadow(0 0 8px currentColor);
+    }
+
+    @keyframes ecg-pulse {
+      0% {
+        stroke-dashoffset: 300;
+      }
+      100% {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    .upload-section {
+      width: 100%;
+      max-width: 600px;
+      padding: 3rem;
+      border-radius: 30px;
+      backdrop-filter: blur(20px);
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 15px 60px rgba(0, 0, 0, 0.7), inset 0 0 50px rgba(255, 255, 255, 0.05);
+      transform-style: preserve-3d;
+      transition: all 0.4s ease;
+    }
+
+    .upload-section::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.03), transparent);
+      animation: shimmer 3s linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes shimmer {
+      0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+      100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+    }
+
+    .upload-section:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 80px rgba(0, 0, 0, 0.9), inset 0 0 60px rgba(255, 255, 255, 0.08);
+    }
+
+    .upload-label {
+      display: block;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 2rem;
+      text-align: center;
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px currentColor;
+    }
+
+    .file-input-wrapper {
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+      width: 100%;
+    }
+
+    .file-input-wrapper input[type=file] {
+      position: absolute;
+      left: -9999px;
+    }
+
+    .file-input-label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      padding: 4rem 2rem;
+      border: 3px dashed rgba(255, 255, 255, 0.3);
+      border-radius: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.4s ease;
+      font-weight: 600;
+      font-size: 1.1rem;
+      position: relative;
+      overflow: hidden;
+      background: rgba(0, 0, 0, 0.3);
+      box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .file-input-label::before {
+      content: '📂';
+      font-size: 5rem;
+      display: block;
+      transition: all 0.4s ease;
+      opacity: 0.8;
+      animation: iconFloat 3s ease-in-out infinite;
+    }
+
+    @keyframes iconFloat {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-10px) rotate(5deg); }
+    }
+
+    .file-input-label:hover {
+      transform: translateY(-5px) scale(1.02);
+      background: rgba(0, 0, 0, 0.4);
+      border-color: rgba(255, 255, 255, 0.5);
+      box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.6), 0 10px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .file-input-label:hover::before {
+      transform: scale(1.2) rotate(-5deg);
+      opacity: 1;
+    }
+
+    .file-name {
+      margin-top: 1.5rem;
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      font-size: 1rem;
+      text-align: center;
+      font-weight: 600;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      animation: slideIn 0.5s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .parameters-section {
+      margin-top: 2rem;
+      padding: 2rem;
+      border-radius: 20px;
+      display: none;
+      backdrop-filter: blur(15px);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      animation: slideIn 0.6s ease;
+    }
+
+    .parameters-section.visible {
+      display: block;
+    }
+
+    .parameters-title {
+      font-size: 1.6rem;
+      font-weight: bold;
+      margin-bottom: 1.5rem;
+      text-shadow: 0 0 10px currentColor;
+    }
+
+    .parameter-item {
+      padding: 1rem;
+      margin-bottom: 0.8rem;
+      border-radius: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.3s ease;
+      border-left: 4px solid transparent;
+    }
+
+    .parameter-item:hover {
+      transform: translateX(5px);
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .parameter-label {
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
+
+    .parameter-value {
+      font-family: 'Courier New', monospace;
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+      font-weight: 600;
+      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .results-section {
+      margin-top: 2rem;
+      padding: 2.5rem;
+      border-radius: 20px;
+      display: none;
+      position: relative;
+      backdrop-filter: blur(20px);
+      border: 3px solid;
+      box-shadow: 0 15px 60px rgba(0, 0, 0, 0.7), inset 0 0 40px rgba(255, 255, 255, 0.05);
+      width: 100%;
+      max-width: 600px;
+      color: #fff;
+    }
+
+    .results-section.visible {
+      display: block;
+      animation: slideIn 0.7s ease;
+    }
+
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .results-title {
+      font-size: 1.8rem;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      text-shadow: 0 0 15px currentColor;
+    }
+
+    .demo-badge {
+      font-size: 0.8rem;
+      padding: 0.4rem 1rem;
+      border-radius: 15px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      animation: badgePulse 2s ease-in-out infinite;
+    }
+
+    @keyframes badgePulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: currentColor;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loaderPulse {
+      width: 30px;
+      height: 30px;
+      margin: 20px auto;
+      border-radius: 50%;
+      background: #4C84FF;
+      animation: pulse 1s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.7); opacity: 0.5; }
+      50% { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(0.7); opacity: 0.5; }
+    }
+
+    .result-card {
+      background: white;
+      padding: 20px;
+      margin: 15px auto;
+      max-width: 650px;
+      border-radius: 14px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.12);
+      border-left: 6px solid #4C84FF;
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity:0; transform: translateY(8px); }
+      to { opacity:1; transform: translateY(0); }
+    }
+
+    .result-card:hover {
+      transform: translateX(5px) scale(1.02);
+      box-shadow: 0 8px 35px rgba(0, 0, 0, 0.5);
+    }
+
+    .result-card-header {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      text-shadow: 0 0 8px currentColor;
+    }
+
+    .result-card-content {
+      font-size: 1rem;
+      line-height: 1.8;
+    }
+
+    .result-metric {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.8rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.2s ease;
+    }
+
+    .result-metric:hover {
+      padding-left: 0.5rem;
+      border-left: 3px solid currentColor;
+    }
+
+    .result-metric:last-child {
+      border-bottom: none;
+    }
+
+    .metric-label {
+      font-weight: 600;
+      opacity: 0.85;
+    }
+
+    .metric-value {
+      font-weight: 700;
+      font-family: 'Courier New', monospace;
+      text-shadow: 0 0 5px currentColor;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 0.4rem 1rem;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      box-shadow: 0 3px 15px rgba(0, 0, 0, 0.3);
+      animation: badgeGlow 2s ease-in-out infinite;
+    }
+
+    @keyframes badgeGlow {
+      0%, 100% { box-shadow: 0 3px 15px rgba(0, 0, 0, 0.3); }
+      50% { box-shadow: 0 5px 25px currentColor; }
+    }
+
+    .success {
+      background: rgba(0, 255, 150, 0.25);
+      color: #00ff96;
+      border: 2px solid rgba(0, 255, 150, 0.5);
+    }
+
+    .warning {
+      background: rgba(255, 200, 0, 0.25);
+      color: #ffc800;
+      border: 2px solid rgba(255, 200, 0, 0.5);
+    }
+
+    /* ---- Tabs ---- */
+    .tabs-container { width: 100%; margin-top: 1.5rem; }
+    .tab-buttons { display: flex; gap: 0; border-radius: 14px; overflow: hidden; margin-bottom: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+    .tab-btn { flex: 1; padding: 1rem 1.5rem; border: none; font-weight: 700; font-size: 1rem; cursor: pointer; transition: all 0.3s ease; background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.5); letter-spacing: 0.5px; }
+    .tab-btn:hover { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.8); }
+    .tab-btn.active { background: rgba(255,255,255,0.15); color: #fff; box-shadow: inset 0 -3px 0 var(--accent, #ff3366); }
+    .tab-panel { display: none; animation: fadeIn 0.4s ease-out; }
+    .tab-panel.active { display: block; }
+
+    /* ---- Coloquial cards ---- */
+    .coloquial-card { padding: 1.5rem; margin-bottom: 1.2rem; border-radius: 16px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 8px 30px rgba(0,0,0,0.3); transition: all 0.3s ease; }
+    .coloquial-card:hover { transform: translateX(4px); }
+    .coloquial-header { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.8rem; }
+    .coloquial-icon { font-size: 1.8rem; }
+    .coloquial-name { font-weight: 700; font-size: 1.1rem; flex: 1; }
+    .coloquial-value { font-size: 2rem; font-weight: 800; font-family: 'Courier New', monospace; }
+    .coloquial-explication { font-size: 0.95rem; line-height: 1.6; margin-top: 0.5rem; opacity: 0.85; }
+    .level-badge { display: inline-block; padding: 0.3rem 0.9rem; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+    .level-bajo, .level-mala { background: rgba(255,80,80,0.25); color: #ff5050; border: 1px solid rgba(255,80,80,0.4); }
+    .level-normal, .level-moderado, .level-regular { background: rgba(255,200,0,0.2); color: #ffc800; border: 1px solid rgba(255,200,0,0.35); }
+    .level-alto, .level-buena { background: rgba(0,230,120,0.2); color: #00e678; border: 1px solid rgba(0,230,120,0.35); }
+
+    /* ---- Global interpretation ---- */
+    .global-card { margin-top: 1.5rem; padding: 1.8rem; border-radius: 16px; backdrop-filter: blur(10px); border: 2px solid; box-shadow: 0 8px 30px rgba(0,0,0,0.3); text-align: center; }
+    .global-estado { font-size: 1.8rem; font-weight: 800; margin-bottom: 0.8rem; }
+    .global-resumen { font-size: 1.05rem; line-height: 1.7; margin-bottom: 1rem; opacity: 0.9; }
+    .global-recomendacion { font-size: 0.95rem; line-height: 1.6; padding: 1rem; border-radius: 12px; background: rgba(255,255,255,0.05); }
+
+    /* ---- Technical table ---- */
+    .tecnica-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    .tecnica-table th, .tecnica-table td { padding: 0.7rem 1rem; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .tecnica-table th { font-weight: 700; opacity: 0.6; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
+    .tecnica-table tr:hover td { background: rgba(255,255,255,0.03); }
+    .tecnica-table .cat-row td { font-weight: 700; font-size: 0.95rem; background: rgba(255,255,255,0.05); padding-top: 1.2rem; }
+
+    /* ---- Status dot ---- */
+    .status-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-left: 0.8rem; vertical-align: middle; transition: all 0.5s ease; box-shadow: 0 0 8px currentColor; }
+    .status-dot.online { background: #00e678; color: #00e678; }
+    .status-dot.offline { background: #ff5050; color: #ff5050; }
+    .status-dot.checking { background: #ffc800; color: #ffc800; animation: pulse 1s infinite; }
+
+    @media (max-width: 640px) {
+      .title {
+        font-size: 2rem;
+      }
+
+      .heart-3d {
+        width: 180px;
+        height: 180px;
+      }
+
+      .heart-svg {
+        width: 130px;
+        height: 130px;
+      }
+
+      .upload-section {
+        padding: 2rem;
+      }
+
+      .results-section {
+        padding: 1.5rem;
+      }
+
+      .results-title {
+        font-size: 1.3rem;
+      }
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body>
+  <main class="container">
+   <div class="stars" id="starsContainer"></div>
+   <div class="content-wrapper">
+    <h1 class="title" id="titleText">HeartBeat</h1>
+    <div id="backendStatus" style="
+        display:none;
+        padding:10px;
+        margin:10px auto;
+        width:220px;
+        text-align:center;
+        background:#e8fff0;
+        color:#0b8a29;
+        border:1px solid #0b8a29;
+        border-radius:8px;
+        font-weight:bold;
+        box-shadow:0 2px 6px rgba(0,0,0,0.1);
+    ">
+    </div>
+    <div class="heart-container">
+     <div class="heart-3d" id="heart3d">
+      <div class="heart-face">
+       <svg class="heart-svg" viewbox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><defs>
+         <radialgradient id="heartGradient3D" cx="35%" cy="35%">
+          <stop offset="0%" id="gradientStop1" stop-opacity="1" />
+          <stop offset="40%" id="gradientStop2" stop-opacity="0.9" />
+          <stop offset="70%" id="gradientStop3" stop-opacity="0.7" />
+          <stop offset="100%" style="stop-color: #660022; stop-opacity: 1" />
+         </radialgradient>
+         <filter id="glow3D">
+          <fegaussianblur stddeviation="4" result="coloredBlur" />
+          <femerge>
+           <femergenode in="coloredBlur" />
+           <femergenode in="coloredBlur" />
+           <femergenode in="SourceGraphic" />
+          </femerge>
+         </filter>
+         <filter id="depth">
+          <fegaussianblur in="SourceAlpha" stddeviation="2" />
+          <feoffset dx="3" dy="5" result="offsetblur" />
+          <fecomponenttransfer>
+           <fefunca type="linear" slope="0.5" />
+          </fecomponenttransfer>
+          <femerge>
+           <femergenode />
+           <femergenode in="SourceGraphic" />
+          </femerge>
+         </filter>
+         <lineargradient id="shineGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color: white; stop-opacity: 0.6" />
+          <stop offset="100%" style="stop-color: white; stop-opacity: 0" />
+         </lineargradient>
+        </defs> <path d="M50,85 
+                     C50,85 20,65 20,45 
+                     C20,35 25,25 35,25 
+                     C42,25 47,30 50,35 
+                     C53,30 58,25 65,25 
+                     C75,25 80,35 80,45 
+                     C80,65 50,85 50,85 Z" fill="#000000" opacity="0.4" transform="translate(3, 5)" filter="url(#depth)" /> <path d="M50,85 
+                     C50,85 20,65 20,45 
+                     C20,35 25,25 35,25 
+                     C42,25 47,30 50,35 
+                     C53,30 58,25 65,25 
+                     C75,25 80,35 80,45 
+                     C80,65 50,85 50,85 Z" id="heartPath" fill="url(#heartGradient3D)" filter="url(#glow3D)" stroke-width="0" /> <path d="M50,85 
+                     C50,85 20,65 20,45 
+                     C20,35 25,25 35,25 
+                     C42,25 47,30 50,35 
+                     C53,30 58,25 65,25 
+                     C75,25 80,35 80,45 
+                     C80,65 50,85 50,85 Z" fill="none" id="heartStroke" stroke-width="2" opacity="0.8" /> <path d="M 25,45 Q 30,55 35,65" stroke="white" stroke-width="2" fill="none" opacity="0.3" stroke-linecap="round" /> <path d="M 75,45 Q 70,55 65,65" stroke="white" stroke-width="2" fill="none" opacity="0.2" stroke-linecap="round" /> <circle cx="32" cy="35" r="2" fill="white" opacity="0.9" /> <circle cx="60" cy="33" r="1.5" fill="white" opacity="0.8" /> <circle cx="42" cy="48" r="1" fill="white" opacity="0.6" />
+       </svg>
+      </div>
+      <div class="ecg-line-3d">
+       <svg viewbox="0 0 300 60" xmlns="http://www.w3.org/2000/svg"><path d="M0,30 L50,30 L55,30 L60,10 L65,50 L70,30 L120,30 L300,30" class="ecg-path-3d" id="ecgPath" stroke="#00ff00" />
+       </svg>
+      </div>
+      <div class="particles" id="particlesContainer"></div>
+     </div>
+    </div>
+    <div class="upload-section" id="uploadSection"><label class="upload-label" id="uploadLabel" for="fileInput">Selecciona un archivo</label>
+     <div class="file-input-wrapper"><input type="file" id="fileInput" accept="*/*"> <label for="fileInput" class="file-input-label" id="fileInputLabel"> Haz clic aquí o arrastra un archivo </label>
+     </div>
+     <div class="file-name" id="fileName" style="display: none;"></div>
+    </div>
+    <div class="parameters-section" id="parametersSection">
+     <h2 class="parameters-title">Parámetros del Archivo:</h2>
+     <div id="parametersList"></div>
+    </div>
+    <div class="results-section" id="resultsSection">
+     <div class="results-header">
+      <h2 class="results-title" id="resultsTitle">
+      <div id="loadingSpinner" class="loaderPulse" style="display:none"></div>
+      <span id="resultsTitleText">Resultados</span>
+      <span class="status-dot" id="backendIndicator" title="Verificando backend..."></span>
+      </h2><span class="demo-badge" id="demoBadge"></span>
+     </div>
+     <div class="tabs-container" id="tabsContainer" style="display:none">
+      <div class="tab-buttons">
+       <button class="tab-btn active" data-tab="coloquial">Tu Resultado</button>
+       <button class="tab-btn" data-tab="tecnica">Métricas Técnicas</button>
+      </div>
+      <div class="tab-panel active" id="tabColoquial"></div>
+      <div class="tab-panel" id="tabTecnica"></div>
+     </div>
+     <div id="resultsContent"></div>
+    </div>
+   </div>
+  </main>
+  <script>
+    const defaultConfig = {
+      background_color: '#0a0a0a',
+      heart_color: '#ff0844',
+      surface_color: '#1a1a1a',
+      text_color: '#e0e0e0',
+      accent_color: '#ff3366',
+      border_color: '#ff0844',
+      title_text: 'HeartBeat',
+      upload_label: 'Selecciona un archivo',
+      font_family: 'Arial',
+      font_size: 16
+    };
+
+    let config = { ...defaultConfig };
+
+    async function onConfigChange(newConfig) {
+      config = newConfig;
+      
+      const backgroundColor = config.background_color || defaultConfig.background_color;
+      const heartColor = config.heart_color || defaultConfig.heart_color;
+      const surfaceColor = config.surface_color || defaultConfig.surface_color;
+      const textColor = config.text_color || defaultConfig.text_color;
+      const accentColor = config.accent_color || defaultConfig.accent_color;
+      const borderColor = config.border_color || defaultConfig.border_color;
+      const customFont = config.font_family || defaultConfig.font_family;
+      const baseSize = config.font_size || defaultConfig.font_size;
+      const baseFontStack = 'Arial, sans-serif';
+
+      document.body.style.background = `radial-gradient(ellipse at top, ${backgroundColor}dd, ${backgroundColor} 50%)`;
+      document.body.style.fontFamily = `${customFont}, ${baseFontStack}`;
+      document.body.style.fontSize = `${baseSize}px`;
+      document.body.style.setProperty('--accent', accentColor);
+
+      document.querySelector('.container').style.background = 'transparent';
+      
+      const titleElement = document.getElementById('titleText');
+      titleElement.textContent = config.title_text || defaultConfig.title_text;
+      titleElement.style.color = textColor;
+      titleElement.style.fontFamily = `${customFont}, ${baseFontStack}`;
+      titleElement.style.fontSize = `${baseSize * 2}px`;
+
+      const gradientStop1 = document.getElementById('gradientStop1');
+      const gradientStop2 = document.getElementById('gradientStop2');
+      const gradientStop3 = document.getElementById('gradientStop3');
+      
+      gradientStop1.style.stopColor = '#ffffff';
+      gradientStop2.style.stopColor = heartColor;
+      gradientStop3.style.stopColor = accentColor;
+      
+      document.getElementById('heartStroke').style.stroke = accentColor;
+      
+      const heartSvg = document.querySelector('.heart-svg');
+      heartSvg.style.color = heartColor;
+
+      const particles = document.querySelectorAll('.particle');
+      particles.forEach(p => {
+        p.style.background = accentColor;
+        p.style.boxShadow = `0 0 10px ${accentColor}`;
+      });
+
+      const uploadSection = document.getElementById('uploadSection');
+      uploadSection.style.background = surfaceColor;
+      uploadSection.style.borderColor = borderColor;
+
+      const uploadLabelElement = document.getElementById('uploadLabel');
+      uploadLabelElement.textContent = config.upload_label || defaultConfig.upload_label;
+      uploadLabelElement.style.color = textColor;
+      uploadLabelElement.style.fontFamily = `${customFont}, ${baseFontStack}`;
+      uploadLabelElement.style.fontSize = `${baseSize * 1.5}px`;
+
+      const fileInputLabel = document.getElementById('fileInputLabel');
+      fileInputLabel.style.borderColor = borderColor;
+      fileInputLabel.style.color = textColor;
+      fileInputLabel.style.fontFamily = `${customFont}, ${baseFontStack}`;
+      fileInputLabel.style.fontSize = `${baseSize * 1.1}px`;
+
+      const fileName = document.getElementById('fileName');
+      fileName.style.background = `${accentColor}30`;
+      fileName.style.color = textColor;
+      fileName.style.fontFamily = `${customFont}, ${baseFontStack}`;
+      fileName.style.fontSize = `${baseSize}px`;
+
+      const parametersSection = document.getElementById('parametersSection');
+      parametersSection.style.background = surfaceColor;
+      parametersSection.style.border = `3px solid ${borderColor}`;
+
+      const parametersTitle = document.querySelector('.parameters-title');
+      if (parametersTitle) {
+        parametersTitle.style.color = textColor;
+        parametersTitle.style.fontFamily = `${customFont}, ${baseFontStack}`;
+        parametersTitle.style.fontSize = `${baseSize * 1.6}px`;
+      }
+
+      const parameterItems = document.querySelectorAll('.parameter-item');
+      parameterItems.forEach(item => {
+        item.style.background = `${accentColor}15`;
+        item.style.color = textColor;
+        item.style.borderLeftColor = accentColor;
+        item.style.fontFamily = `${customFont}, ${baseFontStack}`;
+        item.style.fontSize = `${baseSize}px`;
+      });
+
+      const parameterValues = document.querySelectorAll('.parameter-value');
+      parameterValues.forEach(value => {
+        value.style.background = `${accentColor}35`;
+        value.style.color = textColor;
+        value.style.fontFamily = `${customFont}, ${baseFontStack}`;
+        value.style.fontSize = `${baseSize * 0.95}px`;
+      });
+
+      const resultsSection = document.getElementById('resultsSection');
+      resultsSection.style.background = surfaceColor;
+      resultsSection.style.borderColor = accentColor;
+      resultsSection.style.color = textColor;
+
+      const resultsTitle = document.getElementById('resultsTitleText');
+      if (resultsTitle) {
+        resultsTitle.style.color = textColor;
+        resultsTitle.style.fontFamily = `${customFont}, ${baseFontStack}`;
+        resultsTitle.style.fontSize = `${baseSize * 1.8}px`;
+      }
+
+      const demoBadge = document.getElementById('demoBadge');
+      if (demoBadge) {
+        demoBadge.style.background = `${accentColor}35`;
+        demoBadge.style.color = accentColor;
+        demoBadge.style.border = `2px solid ${accentColor}`;
+      }
+
+      const loadingSpinner = document.getElementById('loadingSpinner');
+      if (loadingSpinner) {
+        loadingSpinner.style.borderTopColor = accentColor;
+      }
+
+      const tabPanels = document.querySelectorAll('.tab-panel');
+      tabPanels.forEach(p => p.style.color = textColor);
+
+      const coloquialCards = document.querySelectorAll('.coloquial-card, .global-card');
+      coloquialCards.forEach(c => { c.style.color = textColor; c.style.background = `${accentColor}10`; });
+
+      const tecnicasRows = document.querySelectorAll('.tecnica-table td, .tecnica-table th');
+      tecnicasRows.forEach(el => el.style.color = textColor);
+
+      const resultCards = document.querySelectorAll('.result-card');
+      resultCards.forEach(card => {
+        card.style.background = `${accentColor}12`;
+        card.style.borderLeftColor = accentColor;
+        card.style.color = textColor;
+        card.style.fontFamily = `${customFont}, ${baseFontStack}`;
+        card.style.fontSize = `${baseSize}px`;
+      });
+    }
+
+    function mapToCapabilities(config) {
+      return {
+        recolorables: [
+          {
+            get: () => config.background_color || defaultConfig.background_color,
+            set: (value) => {
+              config.background_color = value;
+              if (window.elementSdk) {
+                window.elementSdk.setConfig({ background_color: value });
+              }
+            }
+          },
+          {
+            get: () => config.heart_color || defaultConfig.heart_color,
+            set: (value) => {
+              config.heart_color = value;
+              if (window.elementSdk) {
+                window.elementSdk.setConfig({ heart_color: value });
+              }
+            }
+          },
+          {
+            get: () => config.surface_color || defaultConfig.surface_color,
+            set: (value) => {
+              config.surface_color = value;
+              if (window.elementSdk) {
+                window.elementSdk.setConfig({ surface_color: value });
+              }
+            }
+          },
+          {
+            get: () => config.text_color || defaultConfig.text_color,
+            set: (value) => {
+              config.text_color = value;
+              if (window.elementSdk) {
+                window.elementSdk.setConfig({ text_color: value });
+              }
+            }
+          },
+          {
+            get: () => config.accent_color || defaultConfig.accent_color,
+            set: (value) => {
+              config.accent_color = value;
+              if (window.elementSdk) {
+                window.elementSdk.setConfig({ accent_color: value });
+              }
+            }
+          }
+        ],
+        borderables: [],
+        fontEditable: {
+          get: () => config.font_family || defaultConfig.font_family,
+          set: (value) => {
+            config.font_family = value;
+            if (window.elementSdk) {
+              window.elementSdk.setConfig({ font_family: value });
+            }
+          }
+        },
+        fontSizeable: {
+          get: () => config.font_size || defaultConfig.font_size,
+          set: (value) => {
+            config.font_size = value;
+            if (window.elementSdk) {
+              window.elementSdk.setConfig({ font_size: value });
+            }
+          }
+        }
+      };
+    }
+
+    function mapToEditPanelValues(config) {
+      return new Map([
+        ["title_text", config.title_text || defaultConfig.title_text],
+        ["upload_label", config.upload_label || defaultConfig.upload_label]
+      ]);
+    }
+
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities,
+        mapToEditPanelValues
+      });
+    }
+
+    onConfigChange(config);
+
+    setTimeout(checkBackendHealth, 500);
+
+    function createCustomCursor() {
+      const cursor = document.createElement('div');
+      cursor.className = 'custom-cursor';
+      cursor.id = 'customCursor';
+      document.body.appendChild(cursor);
+
+      let mouseX = 0, mouseY = 0;
+      let cursorX = 0, cursorY = 0;
+
+      function updateCursor() {
+        const speed = 0.15;
+        cursorX += (mouseX - cursorX) * speed;
+        cursorY += (mouseY - cursorY) * speed;
+        cursor.style.left = `${cursorX}px`;
+        cursor.style.top = `${cursorY}px`;
+        requestAnimationFrame(updateCursor);
+      }
+      updateCursor();
+
+      document.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+
+        if (Math.random() > 0.85) {
+          const trail = document.createElement('div');
+          trail.className = 'cursor-trail';
+          trail.style.left = `${e.clientX}px`;
+          trail.style.top = `${e.clientY}px`;
+          document.body.appendChild(trail);
+
+          setTimeout(() => trail.remove(), 500);
+        }
+      });
+
+      document.addEventListener('mousedown', () => {
+        cursor.classList.add('clicking');
+      });
+
+      document.addEventListener('mouseup', () => {
+        cursor.classList.remove('clicking');
+      });
+
+      document.addEventListener('mouseleave', () => {
+        cursor.style.opacity = '0';
+      });
+
+      document.addEventListener('mouseenter', () => {
+        cursor.style.opacity = '1';
+      });
+    }
+
+    createCustomCursor();
+
+    function createStars() {
+      const starsContainer = document.getElementById('starsContainer');
+      const starCount = 150;
+      
+      for (let i = 0; i < starCount; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        star.style.left = `${Math.random() * 100}%`;
+        star.style.top = `${Math.random() * 100}%`;
+        star.style.animationDelay = `${Math.random() * 3}s`;
+        star.style.animationDuration = `${2 + Math.random() * 3}s`;
+        starsContainer.appendChild(star);
+      }
+
+      const medicalShapes = [
+        '<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><rect x="16" y="8" width="8" height="24" fill="currentColor"/><rect x="8" y="16" width="24" height="8" fill="currentColor"/></svg>',
+        '<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><path d="M20,35 C20,35 5,25 5,15 C5,10 7.5,7.5 12.5,7.5 C15,7.5 17.5,9 20,11 C22.5,9 25,7.5 27.5,7.5 C32.5,7.5 35,10 35,15 C35,25 20,35 20,35 Z" fill="currentColor"/></svg>',
+        '<svg viewBox="0 0 60 20" xmlns="http://www.w3.org/2000/svg"><polyline points="0,10 15,10 18,5 21,15 24,10 60,10" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
+        '<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="15" fill="none" stroke="currentColor" stroke-width="2"/><line x1="20" y1="12" x2="20" y2="28" stroke="currentColor" stroke-width="2"/><line x1="12" y1="20" x2="28" y2="20" stroke="currentColor" stroke-width="2"/></svg>',
+        '<svg viewBox="0 0 30 60" xmlns="http://www.w3.org/2000/svg"><path d="M5,5 Q15,15 5,25 Q15,35 5,45 Q15,55 5,65" fill="none" stroke="currentColor" stroke-width="2"/><path d="M25,5 Q15,15 25,25 Q15,35 25,45 Q15,55 25,65" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
+        '<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><rect x="8" y="15" width="24" height="10" rx="5" fill="currentColor"/><line x1="20" y1="15" x2="20" y2="25" stroke="#000" stroke-width="2" opacity="0.3"/></svg>'
+      ];
+      
+      for (let i = 0; i < 15; i++) {
+        const shapeContainer = document.createElement('div');
+        shapeContainer.className = 'medical-symbol';
+        shapeContainer.innerHTML = medicalShapes[i % medicalShapes.length];
+        shapeContainer.style.position = 'absolute';
+        shapeContainer.style.left = `${Math.random() * 100}%`;
+        shapeContainer.style.top = `${Math.random() * 100}%`;
+        shapeContainer.style.width = `${30 + Math.random() * 30}px`;
+        shapeContainer.style.height = `${30 + Math.random() * 30}px`;
+        shapeContainer.style.color = `rgba(255, 50, 100, 0.15)`;
+        shapeContainer.style.opacity = '0.2';
+        shapeContainer.style.animation = `medicalFloat ${10 + Math.random() * 10}s linear infinite`;
+        shapeContainer.style.animationDelay = `${Math.random() * 5}s`;
+        shapeContainer.style.transition = 'all 0.3s ease-out';
+        shapeContainer.style.filter = 'blur(1px)';
+        starsContainer.appendChild(shapeContainer);
+      }
+
+      const interactiveGlow = document.createElement('div');
+      interactiveGlow.className = 'interactive-glow';
+      interactiveGlow.id = 'interactiveGlow';
+      document.body.appendChild(interactiveGlow);
+
+      let mouseX = 0, mouseY = 0;
+      let glowX = 0, glowY = 0;
+
+      document.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        
+        interactiveGlow.style.left = `${mouseX - 200}px`;
+        interactiveGlow.style.top = `${mouseY - 200}px`;
+        interactiveGlow.style.opacity = '1';
+
+        const stars = document.querySelectorAll('.star');
+        const moveX = (e.clientX - window.innerWidth / 2) * 0.01;
+        const moveY = (e.clientY - window.innerHeight / 2) * 0.01;
+        starsContainer.style.transform = `translate(${moveX}px, ${moveY}px)`;
+
+        const medicalSymbols = document.querySelectorAll('.medical-symbol');
+        medicalSymbols.forEach(symbol => {
+          const rect = symbol.getBoundingClientRect();
+          const symbolX = rect.left + rect.width / 2;
+          const symbolY = rect.top + rect.height / 2;
+          const distance = Math.sqrt(Math.pow(mouseX - symbolX, 2) + Math.pow(mouseY - symbolY, 2));
+          
+          if (distance < 200) {
+            const scale = 1 + (200 - distance) / 200;
+            const opacity = 0.1 + (200 - distance) / 1000;
+            symbol.style.transform = `scale(${scale}) translateY(${symbol.style.transform.match(/translateY\(([^)]+)\)/)?.[1] || '0'})`;
+            symbol.style.opacity = Math.min(opacity, 0.5);
+          } else {
+            symbol.style.opacity = '0.1';
+          }
+        });
+      });
+
+      document.addEventListener('click', (e) => {
+        const pulseRing = document.createElement('div');
+        pulseRing.className = 'pulse-ring';
+        pulseRing.style.left = `${e.clientX - 100}px`;
+        pulseRing.style.top = `${e.clientY - 100}px`;
+        document.body.appendChild(pulseRing);
+
+        setTimeout(() => {
+          pulseRing.remove();
+        }, 2000);
+      });
+
+      document.addEventListener('mouseleave', () => {
+        interactiveGlow.style.opacity = '0';
+      });
+    }
+
+    function createParticles() {
+      const particlesContainer = document.getElementById('particlesContainer');
+      const particleCount = 20;
+      
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        const angle = (i / particleCount) * 360;
+        const radius = 120;
+        const x = Math.cos(angle * Math.PI / 180) * radius;
+        const y = Math.sin(angle * Math.PI / 180) * radius;
+        particle.style.left = `calc(50% + ${x}px)`;
+        particle.style.top = `calc(50% + ${y}px)`;
+        particle.style.animationDelay = `${i * 0.2}s`;
+        particle.style.animationDuration = `${3 + Math.random() * 2}s`;
+        particlesContainer.appendChild(particle);
+      }
+    }
+
+    createStars();
+    createParticles();
+
+    const heart3d = document.getElementById('heart3d');
+    let isMouseDown = false;
+    let startX, startY;
+    let currentRotationY = 0, currentRotationX = 0;
+
+    heart3d.addEventListener('mousedown', (e) => {
+      isMouseDown = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      heart3d.style.animationPlayState = 'paused';
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isMouseDown) return;
+      const deltaX = e.clientX - startX;
+      const deltaY = e.clientY - startY;
+      currentRotationY += deltaX * 0.5;
+      currentRotationX -= deltaY * 0.5;
+      heart3d.style.transform = `rotateY(${currentRotationY}deg) rotateX(${currentRotationX}deg)`;
+      startX = e.clientX;
+      startY = e.clientY;
+    });
+
+    document.addEventListener('mouseup', () => {
+      isMouseDown = false;
+      setTimeout(() => {
+        heart3d.style.animationPlayState = 'running';
+        currentRotationY = 0;
+        currentRotationX = 0;
+      }, 1000);
+    });
+
+    // ---- Backend health check ----
+    const BACKEND_URL = "http://localhost:8000";
+
+    async function checkBackendHealth() {
+      const dot = document.getElementById('backendIndicator');
+      dot.className = 'status-dot checking';
+      dot.title = 'Verificando backend...';
+      try {
+        const res = await fetch(`${BACKEND_URL}/health`, { method: 'GET', signal: AbortSignal.timeout(3000) });
+        if (res.ok) {
+          dot.className = 'status-dot online';
+          dot.title = 'Backend conectado';
+        } else {
+          dot.className = 'status-dot offline';
+          dot.title = 'Backend no responde';
+        }
+      } catch {
+        dot.className = 'status-dot offline';
+        dot.title = 'Backend no disponible';
+      }
+    }
+
+    // ---- Tab switching ----
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('.tab-btn');
+      if (!btn) return;
+      const container = btn.closest('.tabs-container');
+      if (!container) return;
+      container.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      container.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      const panel = document.getElementById('tab' + btn.dataset.tab.charAt(0).toUpperCase() + btn.dataset.tab.slice(1));
+      if (panel) panel.classList.add('active');
+    });
+
+    // ---- Render functions ----
+    function renderColoquialCards(data) {
+      const container = document.getElementById('tabColoquial');
+      if (!data.coloquiales || data.coloquiales.length === 0) {
+        container.innerHTML = '<p style="opacity:0.6;text-align:center">No hay suficientes datos para mostrar.</p>';
+        return;
+      }
+      let html = '';
+      for (const item of data.coloquiales) {
+        html += `
+          <div class="coloquial-card">
+            <div class="coloquial-header">
+              <span class="coloquial-icon">${item.icono}</span>
+              <span class="coloquial-name">${item.nombre}</span>
+              <span class="level-badge level-${item.nivel}">${item.nivel}</span>
+            </div>
+            <div class="coloquial-value">${item.valor}</div>
+            <div class="coloquial-explication">${item.explicacion}</div>
+          </div>
+        `;
+      }
+      const gi = data.interpretacion_global;
+      if (gi) {
+        html += `
+          <div class="global-card" style="border-color: var(--accent, #ff3366)">
+            <div class="global-estado">${gi.estado}</div>
+            <div class="global-resumen">${gi.resumen}</div>
+            <div class="global-recomendacion">💡 ${gi.recomendacion}</div>
+          </div>
+        `;
+      }
+      container.innerHTML = html;
+    }
+
+    function renderTecnicaTable(data) {
+      const container = document.getElementById('tabTecnica');
+      const t = data.tecnicas || {};
+      const categories = {
+        'Generales': ['fs_Hz', 'duracion_s', 'eje_principal'],
+        'Frecuencia Cardíaca': ['FC_final_bpm', 'FC_autocorr_bpm', 'FC_fft_bpm', 'FC_welch_bpm', 'FC_peaks_bpm', 'confianza_consenso'],
+        'Frecuencia Respiratoria': ['FR_final_rpm', 'FR_welch_rpm', 'FR_envelope_rpm', 'FR_peaks_rpm'],
+        'Variabilidad Cardíaca': ['HRV_SDNN_ms', 'HRV_RMSSD_ms', 'HRV_pNN50', 'HRV_LF_Hz', 'HRV_HF_Hz', 'HRV_LF_HF_ratio'],
+        'Calidad': ['SNR_cardiaco_dB', 'SQI'],
+      };
+      const labels = {
+        'fs_Hz': 'Frecuencia de muestreo (Hz)', 'duracion_s': 'Duración (s)', 'eje_principal': 'Eje principal',
+        'FC_final_bpm': 'FC final (bpm)', 'FC_autocorr_bpm': 'FC autocorrelación (bpm)', 'FC_fft_bpm': 'FC FFT (bpm)',
+        'FC_welch_bpm': 'FC Welch (bpm)', 'FC_peaks_bpm': 'FC picos (bpm)', 'confianza_consenso': 'Confianza del consenso',
+        'FR_final_rpm': 'FR final (rpm)', 'FR_welch_rpm': 'FR Welch (rpm)', 'FR_envelope_rpm': 'FR envolvente (rpm)', 'FR_peaks_rpm': 'FR picos (rpm)',
+        'HRV_SDNN_ms': 'SDNN (ms)', 'HRV_RMSSD_ms': 'RMSSD (ms)', 'HRV_pNN50': 'pNN50 (%)',
+        'HRV_LF_Hz': 'LF (Hz)', 'HRV_HF_Hz': 'HF (Hz)', 'HRV_LF_HF_ratio': 'LF/HF',
+        'SNR_cardiaco_dB': 'SNR cardíaco (dB)', 'SQI': 'SQI (0-1)',
+      };
+      const format = {
+        'fs_Hz': v => v, 'duracion_s': v => v, 'eje_principal': v => v,
+        'confianza_consenso': v => v,
+        'SQI': v => v,
+      };
+
+      let html = '<table class="tecnica-table">';
+      for (const [cat, keys] of Object.entries(categories)) {
+        html += `<tr class="cat-row"><td colspan="2">${cat}</td></tr>`;
+        for (const key of keys) {
+          const val = t[key];
+          if (val === null || val === undefined) continue;
+          const displayed = typeof val === 'number' ? val : val;
+          html += `<tr><td>${labels[key] || key}</td><td style="font-family:'Courier New',monospace;font-weight:600;text-align:right">${displayed}</td></tr>`;
+        }
+      }
+      html += '</table>';
+      container.innerHTML = html;
+    }
+
+    // ---- Main processing ----
+    async function processWithBackend(file) {
+      const resultsSection = document.getElementById('resultsSection');
+      const resultsContent = document.getElementById('resultsContent');
+      const tabsContainer = document.getElementById('tabsContainer');
+      const loadingSpinner = document.getElementById('loadingSpinner');
+      const backendDot = document.getElementById('backendIndicator');
+
+      loadingSpinner.style.display = 'inline-block';
+      resultsSection.classList.add('visible');
+      tabsContainer.style.display = 'none';
+      resultsContent.innerHTML = '<p style="text-align:center; opacity:0.7">Procesando archivo...</p>';
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const response = await fetch(`${BACKEND_URL}/procesar`, {
+          method: "POST",
+          body: formData
+        });
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.detail || `Error ${response.status}`);
+        }
+
+        const data = await response.json();
+        loadingSpinner.style.display = 'none';
+
+        if (data.status !== "ok") {
+          resultsContent.innerHTML = `<p style="color:#ff5050">Error del servidor: ${data.detail || 'desconocido'}</p>`;
+          return;
+        }
+
+        const r = data.results;
+        backendDot.className = 'status-dot online';
+        backendDot.title = 'Backend conectado';
+
+        tabsContainer.style.display = 'block';
+        resultsContent.innerHTML = '';
+
+        renderColoquialCards(r);
+        renderTecnicaTable(r);
+
+      } catch (err) {
+        loadingSpinner.style.display = 'none';
+        tabsContainer.style.display = 'none';
+        resultsContent.innerHTML = `
+          <div style="text-align:center;padding:2rem">
+            <p style="font-size:1.5rem;margin-bottom:1rem">⚠️</p>
+            <p style="color:#ff5050;font-weight:700;margin-bottom:0.5rem">Error de conexión</p>
+            <p style="opacity:0.7;font-size:0.95rem">${err.message}</p>
+            <p style="opacity:0.5;font-size:0.85rem;margin-top:1rem">Asegúrate de que el backend esté corriendo en ${BACKEND_URL}</p>
+          </div>
+        `;
+        backendDot.className = 'status-dot offline';
+        backendDot.title = 'Backend no disponible';
+      }
+
+      document.getElementById("backendStatus").style.display = "block";
+      onConfigChange(config);
+    }
+
+    // ---- File input ----
+    const fileInput = document.getElementById('fileInput');
+    const fileNameDisplay = document.getElementById('fileName');
+    const parametersSection = document.getElementById('parametersSection');
+    const parametersList = document.getElementById('parametersList');
+
+    fileInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      
+      if (file) {
+        fileNameDisplay.textContent = `📄 ${file.name}`;
+        fileNameDisplay.style.display = 'block';
+
+        const parameters = {
+          'Nombre': file.name,
+          'Tamaño': `${(file.size / 1024).toFixed(2)} KB`,
+          'Tipo': file.type || 'Desconocido',
+          'Última modificación': new Date(file.lastModified).toLocaleDateString('es-ES', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })
+        };
+
+        parametersList.innerHTML = '';
+        
+        for (const [label, value] of Object.entries(parameters)) {
+          const paramItem = document.createElement('div');
+          paramItem.className = 'parameter-item';
+          paramItem.innerHTML = `
+            <span class="parameter-label">${label}:</span>
+            <span class="parameter-value">${value}</span>
+          `;
+          parametersList.appendChild(paramItem);
+        }
+
+        parametersSection.classList.add('visible');
+        processWithBackend(file);
+        onConfigChange(config);
+      }
+    });
+
+    const fileInputLabel = document.getElementById('fileInputLabel');
+    fileInputLabel.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      fileInputLabel.style.borderWidth = '4px';
+      fileInputLabel.style.transform = 'scale(1.02)';
+    });
+
+    fileInputLabel.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      fileInputLabel.style.borderWidth = '3px';
+      fileInputLabel.style.transform = 'scale(1)';
+    });
+
+    fileInputLabel.addEventListener('drop', (e) => {
+      e.preventDefault();
+      fileInputLabel.style.borderWidth = '3px';
+      fileInputLabel.style.transform = 'scale(1)';
+      
+      if (e.dataTransfer.files.length > 0) {
+        fileInput.files = e.dataTransfer.files;
+        fileInput.dispatchEvent(new Event('change'));
+      }
+    });
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a0c51f4c5b37b05',t:'MTc2MzUxOTc4OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>}
