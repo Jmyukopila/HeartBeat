@@ -1,9 +1,9 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="es">
  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CorazÃ³n Latiente 3D</title>
+  <title>Corazón Latiente 3D</title>
   <script src="/_sdk/element_sdk.js"></script>
   <style>
     body {
@@ -429,7 +429,7 @@
     }
 
     .file-input-label::before {
-      content: 'ðŸ“‚';
+      content: '📂';
       font-size: 5rem;
       display: block;
       transition: all 0.4s ease;
@@ -853,12 +853,12 @@
      </div>
     </div>
     <div class="upload-section" id="uploadSection"><label class="upload-label" id="uploadLabel" for="fileInput">Selecciona un archivo</label>
-     <div class="file-input-wrapper"><input type="file" id="fileInput" accept="*/*"> <label for="fileInput" class="file-input-label" id="fileInputLabel"> Haz clic aquÃ­ o arrastra un archivo </label>
+     <div class="file-input-wrapper"><input type="file" id="fileInput" accept="*/*"> <label for="fileInput" class="file-input-label" id="fileInputLabel"> Haz clic aquí o arrastra un archivo </label>
      </div>
      <div class="file-name" id="fileName" style="display: none;"></div>
     </div>
     <div class="parameters-section" id="parametersSection">
-     <h2 class="parameters-title">ParÃ¡metros del Archivo:</h2>
+     <h2 class="parameters-title">Parámetros del Archivo:</h2>
      <div id="parametersList"></div>
     </div>
     <div class="results-section" id="resultsSection">
@@ -872,7 +872,7 @@
      <div class="tabs-container" id="tabsContainer" style="display:none">
       <div class="tab-buttons">
        <button class="tab-btn active" data-tab="coloquial">Tu Resultado</button>
-       <button class="tab-btn" data-tab="tecnica">MÃ©tricas TÃ©cnicas</button>
+       <button class="tab-btn" data-tab="tecnica">Métricas Técnicas</button>
       </div>
       <div class="tab-panel active" id="tabColoquial"></div>
       <div class="tab-panel" id="tabTecnica"></div>
@@ -1392,7 +1392,7 @@
           <div class="global-card" style="border-color: var(--accent, #ff3366)">
             <div class="global-estado">${gi.estado}</div>
             <div class="global-resumen">${gi.resumen}</div>
-            <div class="global-recomendacion">ðŸ’¡ ${gi.recomendacion}</div>
+            <div class="global-recomendacion">💡 ${gi.recomendacion}</div>
           </div>
         `;
       }
@@ -1404,19 +1404,19 @@
       const t = data.tecnicas || {};
       const categories = {
         'Generales': ['fs_Hz', 'duracion_s', 'eje_principal'],
-        'Frecuencia CardÃ­aca': ['FC_final_bpm', 'FC_autocorr_bpm', 'FC_fft_bpm', 'FC_welch_bpm', 'FC_peaks_bpm', 'confianza_consenso'],
+        'Frecuencia Cardíaca': ['FC_final_bpm', 'FC_autocorr_bpm', 'FC_fft_bpm', 'FC_welch_bpm', 'FC_peaks_bpm', 'confianza_consenso'],
         'Frecuencia Respiratoria': ['FR_final_rpm', 'FR_welch_rpm', 'FR_envelope_rpm', 'FR_peaks_rpm'],
-        'Variabilidad CardÃ­aca': ['HRV_SDNN_ms', 'HRV_RMSSD_ms', 'HRV_pNN50', 'HRV_LF_Hz', 'HRV_HF_Hz', 'HRV_LF_HF_ratio'],
+        'Variabilidad Cardíaca': ['HRV_SDNN_ms', 'HRV_RMSSD_ms', 'HRV_pNN50', 'HRV_LF_Hz', 'HRV_HF_Hz', 'HRV_LF_HF_ratio'],
         'Calidad': ['SNR_cardiaco_dB', 'SQI'],
       };
       const labels = {
-        'fs_Hz': 'Frecuencia de muestreo (Hz)', 'duracion_s': 'DuraciÃ³n (s)', 'eje_principal': 'Eje principal',
-        'FC_final_bpm': 'FC final (bpm)', 'FC_autocorr_bpm': 'FC autocorrelaciÃ³n (bpm)', 'FC_fft_bpm': 'FC FFT (bpm)',
+        'fs_Hz': 'Frecuencia de muestreo (Hz)', 'duracion_s': 'Duración (s)', 'eje_principal': 'Eje principal',
+        'FC_final_bpm': 'FC final (bpm)', 'FC_autocorr_bpm': 'FC autocorrelación (bpm)', 'FC_fft_bpm': 'FC FFT (bpm)',
         'FC_welch_bpm': 'FC Welch (bpm)', 'FC_peaks_bpm': 'FC picos (bpm)', 'confianza_consenso': 'Confianza del consenso',
         'FR_final_rpm': 'FR final (rpm)', 'FR_welch_rpm': 'FR Welch (rpm)', 'FR_envelope_rpm': 'FR envolvente (rpm)', 'FR_peaks_rpm': 'FR picos (rpm)',
         'HRV_SDNN_ms': 'SDNN (ms)', 'HRV_RMSSD_ms': 'RMSSD (ms)', 'HRV_pNN50': 'pNN50 (%)',
         'HRV_LF_Hz': 'LF (Hz)', 'HRV_HF_Hz': 'HF (Hz)', 'HRV_LF_HF_ratio': 'LF/HF',
-        'SNR_cardiaco_dB': 'SNR cardÃ­aco (dB)', 'SQI': 'SQI (0-1)',
+        'SNR_cardiaco_dB': 'SNR cardíaco (dB)', 'SQI': 'SQI (0-1)',
       };
       const format = {
         'fs_Hz': v => v, 'duracion_s': v => v, 'eje_principal': v => v,
@@ -1488,10 +1488,10 @@
         tabsContainer.style.display = 'none';
         resultsContent.innerHTML = `
           <div style="text-align:center;padding:2rem">
-            <p style="font-size:1.5rem;margin-bottom:1rem">âš ï¸</p>
-            <p style="color:#ff5050;font-weight:700;margin-bottom:0.5rem">Error de conexiÃ³n</p>
+            <p style="font-size:1.5rem;margin-bottom:1rem">⚠️</p>
+            <p style="color:#ff5050;font-weight:700;margin-bottom:0.5rem">Error de conexión</p>
             <p style="opacity:0.7;font-size:0.95rem">${err.message}</p>
-            <p style="opacity:0.5;font-size:0.85rem;margin-top:1rem">AsegÃºrate de que el backend estÃ© corriendo en ${BACKEND_URL}</p>
+            <p style="opacity:0.5;font-size:0.85rem;margin-top:1rem">Asegúrate de que el backend esté corriendo en ${BACKEND_URL}</p>
           </div>
         `;
         backendDot.className = 'status-dot offline';
@@ -1512,14 +1512,14 @@
       const file = e.target.files[0];
       
       if (file) {
-        fileNameDisplay.textContent = `ðŸ“„ ${file.name}`;
+        fileNameDisplay.textContent = `📄 ${file.name}`;
         fileNameDisplay.style.display = 'block';
 
         const parameters = {
           'Nombre': file.name,
-          'TamaÃ±o': `${(file.size / 1024).toFixed(2)} KB`,
+          'Tamaño': `${(file.size / 1024).toFixed(2)} KB`,
           'Tipo': file.type || 'Desconocido',
-          'Ãšltima modificaciÃ³n': new Date(file.lastModified).toLocaleDateString('es-ES', {
+          'Última modificación': new Date(file.lastModified).toLocaleDateString('es-ES', {
             year: 'numeric',
             month: 'long',
             day: 'numeric',
